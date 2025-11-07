@@ -4,3 +4,5 @@ node_modules/
 # Otros archivos comunes que no se versionan
 npm-debug.log*
 .DS_Store
+
+frontend/node_modules/.cache/
