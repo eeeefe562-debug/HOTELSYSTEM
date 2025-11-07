@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit2, Trash2, Search } from 'lucide-react';
-import { getProducts, createProduct, updateProduct } from '../services/api';
-
+import { getProducts, createProduct, updateProduct, toggleProductStatus, deleteProduct } from '../services/api';
 const ProductsManagement = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -99,17 +98,29 @@ const ProductsManagement = () => {
     setShowModal(true);
   };
 
-  const handleDeactivate = async (id, currentStatus) => {
-    if (!window.confirm(`¿${currentStatus ? 'Desactivar' : 'Activar'} este producto?`)) return;
+  const handleToggleStatus = async (id, currentStatus) => {
+  if (!window.confirm(`¿${currentStatus ? 'Desactivar' : 'Activar'} este producto?`)) return;
 
-    try {
-      await updateProduct(id, { is_active: !currentStatus });
-      loadProducts();
-      alert('Producto actualizado');
-    } catch (error) {
-      alert('Error al actualizar producto');
-    }
-  };
+  try {
+    await toggleProductStatus(id);
+    loadProducts();
+    alert(`Producto ${currentStatus ? 'desactivado' : 'activado'} exitosamente`);
+  } catch (error) {
+    alert(error.response?.data?.error || 'Error al cambiar estado del producto');
+  }
+};
+
+  const handleDelete = async (id) => {
+  if (!window.confirm('¿Eliminar este producto permanentemente?')) return;
+
+  try {
+    await deleteProduct(id);
+    loadProducts();
+    alert('Producto eliminado exitosamente');
+  } catch (error) {
+    alert(error.response?.data?.error || 'Error al eliminar producto');
+  }
+};
 
   const resetForm = () => {
     setFormData({
@@ -266,28 +277,30 @@ const ProductsManagement = () => {
                   )}
                 </td>
                 <td>
-                  <span className={`badge ${product.is_active ? 'badge-success' : 'badge-danger'}`}>
-                    {product.is_active ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(product)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Editar"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeactivate(product.id, product.is_active)}
-                      className={`${product.is_active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}`}
-                      title={product.is_active ? 'Desactivar' : 'Activar'}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+  <div className="flex gap-2">
+    <button
+      onClick={() => handleEdit(product)}
+      className="text-blue-600 hover:text-blue-800"
+      title="Editar"
+    >
+      <Edit2 className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleToggleStatus(product.id, product.is_active)}
+      className={`${product.is_active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+      title={product.is_active ? 'Desactivar' : 'Activar'}
+    >
+      {product.is_active ? '🔴' : '🟢'}
+    </button>
+    <button
+      onClick={() => handleDelete(product.id)}
+      className="text-red-600 hover:text-red-800"
+      title="Eliminar permanentemente"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</td>
               </tr>
             ))}
           </tbody>

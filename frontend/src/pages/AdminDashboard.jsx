@@ -171,6 +171,26 @@ const RoomsManagement = () => {
       console.error('Error:', error);
     }
   };
+  const handleToggleMaintenance = async (id, roomNumber, currentStatus) => {
+  if (currentStatus === 'occupied' || currentStatus === 'reserved') {
+    alert('No se puede cambiar el estado de una habitación ocupada o reservada');
+    return;
+  }
+
+  const action = currentStatus === 'maintenance' ? 'poner disponible' : 'poner en mantenimiento';
+  
+  if (window.confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} la habitación ${roomNumber}?`)) {
+    try {
+      const { toggleRoomMaintenance } = await import('../services/api');
+      await toggleRoomMaintenance(id);
+      alert(`Habitación ${currentStatus === 'maintenance' ? 'disponible' : 'en mantenimiento'} exitosamente`);
+      loadRooms();
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      alert(error.response?.data?.error || 'Error al cambiar estado de la habitación');
+    }
+  }
+};
 
   // 1. FUNCIÓN AÑADIDA: Manejar la entrada de datos del formulario (Mejora: Usamos un solo manejador)
   const handleInputChange = (e) => {
@@ -236,19 +256,19 @@ const RoomsManagement = () => {
 
 
   // 3. handleDelete (Sintaxis corregida)
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Está seguro de eliminar esta habitación?')) {
-      try {
-        const { deleteRoom } = await import('../services/api'); 
-        await deleteRoom(id);
-        alert('Habitación eliminada exitosamente');
-        loadRooms();
-      } catch (error) {
-        console.error('Error al eliminar habitación:', error); // Log más detallado
-        alert('Error al eliminar habitación');
-      }
+  const handleDelete = async (id, roomNumber) => {
+  if (window.confirm(`⚠️ ¿ELIMINAR PERMANENTEMENTE la habitación ${roomNumber}? Esta acción no se puede deshacer.`)) {
+    try {
+      const { deleteRoom } = await import('../services/api'); 
+      await deleteRoom(id);
+      alert('Habitación eliminada permanentemente');
+      loadRooms();
+    } catch (error) {
+      console.error('Error al eliminar habitación:', error);
+      alert(error.response?.data?.error || 'Error al eliminar habitación');
     }
-  };
+  }
+};
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -303,21 +323,35 @@ const RoomsManagement = () => {
                 <td>{room.total_bookings || 0}</td>
                 <td>Bs. {parseFloat(room.total_revenue || 0).toFixed(2)}</td>
                 <td>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(room)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(room.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+  <div className="flex gap-2">
+    <button
+      onClick={() => handleEdit(room)}
+      className="text-blue-600 hover:text-blue-800"
+      title="Editar"
+    >
+      <Edit2 className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleToggleMaintenance(room.id, room.room_number, room.status)}
+      className={`${
+        room.status === 'maintenance' 
+          ? 'text-green-600 hover:text-green-800' 
+          : 'text-orange-600 hover:text-orange-800'
+      }`}
+      title={room.status === 'maintenance' ? 'Poner disponible' : 'Poner en mantenimiento'}
+      disabled={room.status === 'occupied' || room.status === 'reserved'}
+    >
+      {room.status === 'maintenance' ? '🟢' : '🔧'}
+    </button>
+    <button
+      onClick={() => handleDelete(room.id, room.room_number)}
+      className="text-red-600 hover:text-red-800"
+      title="Eliminar permanentemente"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</td>
               </tr>
             ))}
           </tbody>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCashiers, createCashier, updateCashier, deleteCashier } from '../services/api';
+import { getCashiers, createCashier, updateCashier, toggleCashierStatus, deleteCashier } from '../services/api';
 import { User, Edit, Trash2, Plus, X, Check, Shield, DollarSign } from 'lucide-react';
 
 const CashiersManagement = () => {
@@ -83,17 +83,29 @@ const handleEdit = (cashier) => {
   setShowModal(true);
 };
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`¿Desactivar al cajero ${name}?`)) {
-      try {
-        await deleteCashier(id);
-        alert('Cajero desactivado exitosamente');
-        loadCashiers();
-      } catch (error) {
-        alert('Error: ' + (error.response?.data?.error || error.message));
-      }
+  const handleToggleStatus = async (id, name, currentStatus) => {
+  if (window.confirm(`¿${currentStatus ? 'Desactivar' : 'Activar'} al cajero ${name}?`)) {
+    try {
+      await toggleCashierStatus(id);
+      alert(`Cajero ${currentStatus ? 'desactivado' : 'activado'} exitosamente`);
+      loadCashiers();
+    } catch (error) {
+      alert('Error: ' + (error.response?.data?.error || error.message));
     }
-  };
+  }
+};
+
+const handleDelete = async (id, name) => {
+  if (window.confirm(`⚠️ ¿ELIMINAR PERMANENTEMENTE al cajero ${name}? Esta acción no se puede deshacer.`)) {
+    try {
+      await deleteCashier(id);
+      alert('Cajero eliminado permanentemente');
+      loadCashiers();
+    } catch (error) {
+      alert('Error: ' + (error.response?.data?.error || error.message));
+    }
+  }
+};
 
   const closeModal = () => {
     setShowModal(false);
@@ -249,25 +261,30 @@ const handleEdit = (cashier) => {
                     )}
                   </td>
                   <td>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(cashier)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Editar"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      {cashier.is_active && (
-                        <button
-                          onClick={() => handleDelete(cashier.id, cashier.full_name)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Desactivar"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+  <div className="flex gap-2">
+    <button
+      onClick={() => handleEdit(cashier)}
+      className="text-blue-600 hover:text-blue-800"
+      title="Editar"
+    >
+      <Edit className="w-5 h-5" />
+    </button>
+    <button
+      onClick={() => handleToggleStatus(cashier.id, cashier.full_name, cashier.is_active)}
+      className={`${cashier.is_active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+      title={cashier.is_active ? 'Desactivar' : 'Activar'}
+    >
+      {cashier.is_active ? '🔴' : '🟢'}
+    </button>
+    <button
+      onClick={() => handleDelete(cashier.id, cashier.full_name)}
+      className="text-red-600 hover:text-red-800"
+      title="Eliminar permanentemente"
+    >
+      <Trash2 className="w-5 h-5" />
+    </button>
+  </div>
+</td>
                 </tr>
               ))
             )}

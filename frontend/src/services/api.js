@@ -79,6 +79,11 @@ export const deleteRoom = async (id) => {
   return response.data;
 };
 
+export const toggleRoomMaintenance = async (id) => {
+  const response = await api.patch(`/admin/rooms/${id}/toggle-maintenance`);
+  return response.data;
+};
+
 export const updateRoom = async (id, roomData) => {
   const response = await api.put(`/admin/rooms/${id}`, roomData);
   return response.data;
@@ -108,6 +113,11 @@ export const updateCashier = async (id, cashierData) => {
   return response.data;
 };
 
+export const toggleCashierStatus = async (id) => {
+  const response = await api.patch(`/admin/users/cashiers/${id}/toggle-status`);
+  return response.data;
+};
+
 export const deleteCashier = async (id) => {
   const response = await api.delete(`/admin/users/cashiers/${id}`);
   return response.data;
@@ -129,6 +139,16 @@ export const createProduct = async (productData) => {
 
 export const updateProduct = async (id, productData) => {
   const response = await api.put(`/admin/products/${id}`, productData);
+  return response.data;
+};
+
+export const toggleProductStatus = async (id) => {
+  const response = await api.patch(`/admin/products/${id}/toggle-status`);
+  return response.data;
+};
+
+export const deleteProduct = async (id) => {
+  const response = await api.delete(`/admin/products/${id}`);
   return response.data;
 };
 
